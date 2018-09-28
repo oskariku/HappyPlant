@@ -12,7 +12,7 @@ volatile int songLength = 24; // length of the array
 volatile int currentNote = 0; //which note of the melody is playing
 volatile float scalar = tempo / 60; //Scalar to music algorithm
 volatile int gap = 0; // Gap between note requests
-volatile bool startPlaying = false;
+volatile bool startPlaying = true;
 
 void setup(){
   Serial.begin(9600);
@@ -171,7 +171,7 @@ void setup(){
 }
 
 void loop(){
-
+  Serial.print("test test");
 }
 
 ISR(TIMER1_COMPA_vect){//timer1 interrupt 1Hz toggles pin 13 (LED)
@@ -207,5 +207,6 @@ void nextNote(byte melody[]) {
   currentNote += 2;
   if(currentNote > songLength) {
     currentNote = 0;
+    startPlaying = false;
   }
 }
