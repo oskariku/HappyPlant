@@ -208,5 +208,6 @@ void nextNote(byte melody[]) {
   if(currentNote > songLength) {
     currentNote = 0;
     startPlaying = false;
+    noTone(buzzer);
   }
 }
