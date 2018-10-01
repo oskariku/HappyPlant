@@ -6,7 +6,7 @@ const int buzzer = 9; //buzzer to arduino pin 9
 volatile int midi[127];
 
 struct Melody {
-  byte notes[]; //Array of notes
+  byte notes[64]; //Array of notes
   int mlength; //Length of array
   byte tempo; // Tempo as bpm
   int gap; // gap before the next note
@@ -14,9 +14,6 @@ struct Melody {
   bool playing; //Is the melody playing?
   int curNote;
 };
-
-volatile Melody healing;// pokemon healing
-
 
 void setup(){
   Serial.begin(9600);
@@ -39,7 +36,9 @@ void setup(){
   TIMSK1 |= (1 << OCIE1A);
 
   sei();//allow interrupts
-  
+
+  volatile Melody healing;// pokemon healing
+
   //healing.notes[64] = {71, 8, 128, 8, 71, 8, 128, 8, 71, 8, 68, 8, 76, 2, 128, 4, 128, 2, 128, 4, 128, 2, 128, 4 };
   healing.notes[0] = 71;
   healing.notes[1] = 8;
