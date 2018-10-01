@@ -5,14 +5,18 @@ const int buzzer = 9; //buzzer to arduino pin 9
 
 volatile int midi[127];
 
-byte tempo = 120; // bpm
-volatile byte melody[] = {  71, 8, 128, 8, 71, 8, 128, 8, 71, 8, 68, 8, 76, 2, 128, 4, 128, 2, 128, 4, 128, 2, 128, 4 }; // pokemon healing
-volatile int songLength = 24; // length of the array
+struct Melody {
+  byte notes[]; //Array of notes
+  int mlength; //Length of array
+  byte tempo; // Tempo as bpm
+  int gap; // gap before the next note
+  float scalar; //scalar to scale length according to the tempo
+  bool playing; //Is the melody playing?
+  int curNote;
+};
 
-volatile int currentNote = 0; //which note of the melody is playing
-volatile float scalar = tempo / 60; //Scalar to music algorithm
-volatile int gap = 0; // Gap between note requests
-volatile bool startPlaying = true;
+volatile Melody healing;// pokemon healing
+
 
 void setup(){
   Serial.begin(9600);
@@ -25,7 +29,7 @@ void setup(){
   TCNT1  = 0;//initialize counter value to 0
   // set compare match register for 250hz increments
   //compare match register = [ 16,000,000Hz/ (prescaler * desired interrupt frequency) ] - 1
-  // 64 Hz interrupt frequency (15,5 ms)
+  // 250 Hz interrupt frequency (3,9 ms)
   OCR1A = 31249;
   // turn on CTC mode
   TCCR1B |= (1 << WGM12);
@@ -36,9 +40,70 @@ void setup(){
 
   sei();//allow interrupts
   
-  //Set midi table
-
+  //healing.notes[64] = {71, 8, 128, 8, 71, 8, 128, 8, 71, 8, 68, 8, 76, 2, 128, 4, 128, 2, 128, 4, 128, 2, 128, 4 };
+  healing.notes[0] = 71;
+  healing.notes[1] = 8;
+  healing.mlength = 24; //length of the array
+  healing.tempo = 120; // as bpm
+  healing.playing = true;
+  healing.curNote = 0;
   
+  healing.gap = 0;
+  healing.scalar = healing.tempo / 60;
+  
+  /*melody totoAfrica; // Toto: Africa
+  totoAfrica.notes[64] = { 61, 6, 61, 16, 0, 32, 128, 32, 61, 16, 0, 32, 128, 32, 61, 16, 61, 8, 59, 8, 64, 4  }; // Toto africa
+  totoAfrica.mlength = 22;
+  totoAfrica.tempo = 98;
+  totoAfrica.playing = false;
+  totoAfrica.curNote = 0;*/
+  
+  //Set midi table
+  setMidiNotes();
+}
+
+void loop(){
+  Serial.print("test test");
+}
+
+ISR(TIMER1_COMPA_vect){
+
+  if(healing.playing) {
+    playMelody(healing);
+  }
+}
+
+void playMelody(Melody currentmelody) {
+  if(currentmelody.gap <= 0) {
+    nextNote(currentmelody);
+  }
+  currentmelody.gap--;
+
+}
+
+void nextNote(Melody currentmelody) {
+  int height = midi[currentmelody.notes[currentmelody.curNote]];
+  int noteLength = currentmelody.notes[currentmelody.curNote + 1];
+  int note = currentmelody.notes[currentmelody.curNote];
+
+  noTone(buzzer);
+  
+  //note 128 is rest
+  if(note < 128) {
+    tone(buzzer, height);
+  }
+
+  currentmelody.gap = 256 / noteLength / currentmelody.scalar;
+  
+  currentmelody.curNote += 2;
+  if(currentmelody.curNote > currentmelody.mlength) {
+    currentmelody.curNote = 0;
+    currentmelody.playing = false;
+    noTone(buzzer);
+  }
+}
+
+void setMidiNotes() {
   midi[0] = 8;
   midi[1] = 8;
   midi[2] = 9;
@@ -168,45 +233,4 @@ void setup(){
   midi[126] = 11839;
   midi[127] = 12543;
   
-}
-
-void loop(){
-  Serial.print("test test");
-}
-
-ISR(TIMER1_COMPA_vect){//timer1 interrupt 1Hz toggles pin 13 (LED)
-//generates pulse wave of frequency 1Hz/2 = 0.5kHz (takes two cycles for full wave- toggle high then toggle low)
-
-  if(startPlaying) {
-    playMelody(melody);
-  }
-}
-
-void playMelody(byte melody[]) {
-  if(gap <= 0) {
-    nextNote(melody);
-  }
-  gap = gap-1;
-
-}
-
-void nextNote(byte melody[]) {
-  int height = midi[melody[currentNote]];
-  int noteLength = melody[currentNote + 1];
-  int note = melody[currentNote];
-
-  noTone(buzzer);
-  
-  //note 128 is rest
-  if(note < 128) {
-    tone(buzzer, height);
-  }
-
-  gap = 256 / noteLength / scalar;
-  
-  currentNote += 2;
-  if(currentNote > songLength) {
-    currentNote = 0;
-    startPlaying = false;
-  }
 }
