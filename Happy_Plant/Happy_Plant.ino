@@ -1,4 +1,58 @@
 //final code
+#include <LedControl.h> // Library for 8x8 matrix control
+
+/* Binary images of Led faces */
+const byte SAD[] = {
+
+  B00000000,
+  B00100100,
+  B00100100,
+  B00100100,
+  B00000000,
+  B00111100,
+  B01000010,
+  B01000010
+};
+const byte HAPPY[] = {
+
+  B00000000,
+  B00100100,
+  B00100100,
+  B00100100,
+  B00000000,
+  B01000010,
+  B01000010,
+  B00111100
+};
+const byte NEUTRAL[] = {
+
+  B00000000,
+  B00100100,
+  B00100100,
+  B00100100,
+  B00000000,
+  B01111110,
+  B00000000,
+  B00000000
+};
+const byte DED[] = {
+
+  B00000000,
+  B10100101,
+  B01000010,
+  B10100101,
+  B00000000,
+  B00111100,
+  B01000010,
+  B01000010
+};
+
+/* PINS for 8x8 Matrix */
+const int DIN_PIN = 12;
+const int CLK_PIN = 11;
+const int CS_PIN = 10;
+
+LedControl display = LedControl(DIN_PIN, CLK_PIN, CS_PIN);
 
 
 /* 
@@ -63,6 +117,11 @@ volatile byte tilutus_notes[] = { 57, 64, 60, 64, 64, 64, 60, 64,
 
 void setup() {
   Serial.begin(9600);
+  
+  //Turning 8x8 Display On
+  display.clearDisplay(0);
+  display.shutdown(0, false);
+  display.setIntensity(0,5);
 
   // Pin definitions
   pinMode(buzzer, OUTPUT); // Set buzzer - pin 9 as an output
@@ -119,7 +178,34 @@ void setup() {
 }
 
 void loop() {
-
+  //while loop conditions for smileys' drawing
+  while (Serial.available() > 0) {
+    int soilMoistureValue = Serial.parseInt();
+    Serial.print("Reading values ");
+    Serial.print(soilMoistureValue);
+    
+        Serial.println("out of loop");
+      if (soilMoistureValue >= 240)
+      {
+        drawScreen(DED);
+        Serial.print("DED");
+      }
+      else if (soilMoistureValue >= 160)
+      {
+        drawScreen(NEUTRAL);
+        Serial.print("NEUTRAL");
+      }
+      else if (soilMoistureValue > 140)
+      {
+        drawScreen(SAD);
+        Serial.print("SAD");
+      }
+      else if (soilMoistureValue > 100)
+      {
+        drawScreen(HAPPY);
+        Serial.print("HAPPY");
+      }
+    }
 }
 
 /* Timer interrupt for music */
@@ -199,8 +285,24 @@ void updateOled() {
   u8g2.sendBuffer();         // transfer internal memory to the display
 }
 
-void  drawScreen(byte buffer2[]) {
+// function that draws smileys
+void  drawScreen(byte buffer2[])
+{
+  // Turn on each row in series
+  for (byte i = 0; i < 8; i++)        // count next row
+  {
+    for (byte a = 0; a < 8; a++)    // count next row
+    {
+      display.setLed(0, i, a, bitRead(buffer2[i], 7 - a));
+      /* Debug outputs
+      Serial.print(" col ");
+      Serial.print(i);
+      Serial.print(a);
+      */
+    }
+    //Serial.println();
 
+  }
 }
 
 /* Music system related functions begin here */ 
