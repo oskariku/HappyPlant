@@ -9,11 +9,28 @@ struct Melody {
   byte notes[64]; //Array of notes
   int mlength; //Length of array
   byte tempo; // Tempo as bpm
+  bool playing; //Is the melody playing?
+  
   int gap; // gap before the next note
   float scalar; //scalar to scale length according to the tempo
-  bool playing; //Is the melody playing?
-  int curNote;
+  int curNote; //What note is currently playing
 };
+
+volatile Melody healing;// pokemon healing
+volatile byte healing_notes[24] = {71, 8, 128, 8, 71, 8, 128, 8, 71, 8, 68, 8, 76, 2, 128, 4, 128, 2, 128, 4, 128, 2, 128, 4 };
+volatile Melody totoAfrica; // Toto: Africa
+volatile byte totoAfrica_notes[22] = { 61, 6, 61, 16, 0, 32, 128, 32, 61, 16, 0, 32, 128, 32, 61, 16, 61, 8, 59, 8, 64, 4  }; // Toto africa
+volatile Melody tilutus;
+volatile byte tilutus_notes[] = { 57, 64, 60, 64, 64, 64, 60, 64,
+                                  57, 64, 60, 64, 64, 64, 60, 64,
+                                  57, 64, 60, 64, 64, 64, 60, 64,
+                                  57, 64, 60, 64, 64, 64, 60, 64,
+                                  57, 128, 60, 128, 64, 128, 60, 128,
+                                  57, 128, 60, 128, 64, 128, 60, 128,
+                                  57, 128, 60, 128, 64, 128, 60, 128,
+                                  57, 128, 60, 128, 64, 128, 60, 128
+                                  };
+
 
 void setup(){
   Serial.begin(9600);
@@ -37,26 +54,32 @@ void setup(){
 
   sei();//allow interrupts
 
-  volatile Melody healing;// pokemon healing
-
-  //healing.notes[64] = {71, 8, 128, 8, 71, 8, 128, 8, 71, 8, 68, 8, 76, 2, 128, 4, 128, 2, 128, 4, 128, 2, 128, 4 };
-  healing.notes[0] = 71;
-  healing.notes[1] = 8;
+  
   healing.mlength = 24; //length of the array
   healing.tempo = 120; // as bpm
-  healing.playing = true;
   healing.curNote = 0;
-  
   healing.gap = 0;
   healing.scalar = healing.tempo / 60;
+  healing.playing = true;
   
-  /*melody totoAfrica; // Toto: Africa
-  totoAfrica.notes[64] = { 61, 6, 61, 16, 0, 32, 128, 32, 61, 16, 0, 32, 128, 32, 61, 16, 61, 8, 59, 8, 64, 4  }; // Toto africa
   totoAfrica.mlength = 22;
   totoAfrica.tempo = 98;
-  totoAfrica.playing = false;
-  totoAfrica.curNote = 0;*/
+  totoAfrica.playing = true;
   
+  totoAfrica.curNote = 0;
+  totoAfrica.gap = 0;
+  totoAfrica.scalar = totoAfrica.tempo / 60;
+
+  tilutus.mlength = 64;
+  tilutus.tempo = 120;
+  tilutus.playing = true;
+
+  tilutus.curNote = 0;
+  tilutus.gap = 0;
+  tilutus.scalar = tilutus.tempo / 60;
+  
+
+
   //Set midi table
   setMidiNotes();
 }
@@ -68,22 +91,24 @@ void loop(){
 ISR(TIMER1_COMPA_vect){
 
   if(healing.playing) {
-    playMelody(healing);
+    playMelody(&healing, healing_notes);
+    //playMelody(&totoAfrica, totoAfrica_notes);
+    //playMelody(&tilutus, tilutus_notes);
   }
 }
 
-void playMelody(Melody currentmelody) {
-  if(currentmelody.gap <= 0) {
-    nextNote(currentmelody);
+void playMelody(Melody *currentmelody, byte notes[]) {
+  if(currentmelody->gap <= 0) {
+    nextNote(currentmelody, notes);
   }
-  currentmelody.gap--;
+  currentmelody->gap--;
 
 }
 
-void nextNote(Melody currentmelody) {
-  int height = midi[currentmelody.notes[currentmelody.curNote]];
-  int noteLength = currentmelody.notes[currentmelody.curNote + 1];
-  int note = currentmelody.notes[currentmelody.curNote];
+void nextNote(Melody *currentmelody, byte notes[]) {
+  int height = midi[notes[currentmelody->curNote]];
+  int noteLength = notes[currentmelody->curNote + 1];
+  int note = notes[currentmelody->curNote];
 
   noTone(buzzer);
   
@@ -92,12 +117,12 @@ void nextNote(Melody currentmelody) {
     tone(buzzer, height);
   }
 
-  currentmelody.gap = 256 / noteLength / currentmelody.scalar;
+  currentmelody->gap = 256 / noteLength / currentmelody->scalar;
   
-  currentmelody.curNote += 2;
-  if(currentmelody.curNote > currentmelody.mlength) {
-    currentmelody.curNote = 0;
-    currentmelody.playing = false;
+  currentmelody->curNote += 2;
+  if(currentmelody->curNote > currentmelody->mlength) {
+    currentmelody->curNote = 0;
+    currentmelody->playing = false;
     noTone(buzzer);
   }
 }
