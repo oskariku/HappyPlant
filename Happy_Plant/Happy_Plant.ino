@@ -1,6 +1,33 @@
 //final code
 #include <LedControl.h> // Library for 8x8 matrix control
 
+
+/* 
+ *  
+ * Main variable definitions 
+ *  
+  */
+
+const int MaxMoisture = 515;
+const int OptimalHighLimit = 0;
+const int OptimalLowLimit = 0;
+const int MinMoisture = 255;
+
+int interval = (MaxMoisture - MinMoisture)/4; // Values (wet to dry): 255-320-385-450-515
+int soilMoistureValue = 0;
+
+/* PIN Definitions */
+const int heatSensorPin(A0);
+const int soilSensorPin(A1);
+const int buzzer = 9;
+
+/* PINS for 8x8 Matrix */
+const int DIN_PIN = 12;
+const int CLK_PIN = 11;
+const int CS_PIN = 10;
+
+LedControl display = LedControl(DIN_PIN, CLK_PIN, CS_PIN);
+
 /* Binary images of Led faces */
 const byte SAD[] = {
 
@@ -47,41 +74,12 @@ const byte DED[] = {
   B01000010
 };
 
-/* PINS for 8x8 Matrix */
-const int DIN_PIN = 12;
-const int CLK_PIN = 11;
-const int CS_PIN = 10;
-
-LedControl display = LedControl(DIN_PIN, CLK_PIN, CS_PIN);
-
-
-/* 
- *  
- * Main variable definitions 
- *  
-  */
-
-const int MaxMoisture = 515;
-const int OptimalHighLimit = 0;
-const int OptimalLowLimit = 0;
-const int MinMoisture = 255;
-
-int interval = (MaxMoisture - MinMoisture)/4; // Values (wet to dry): 255-320-385-450-515
-int soilMoistureValue = 0;
-
-/* PIN Definitions */
-const int heatSensorPin(A0);
-const int soilSensorPin(A1);
-const int buzzer = 9;
-
 /* Defining OLED printing */
 #define STATE_TEMP = 0;
 #define STATE_MOIST = 1;
 byte NextState = STATE_TEMP;
 
 U8G2_SSD1306_128X32_UNIVISION_F_HW_I2C u8g2(U8G2_R0); 
-
-
 
 /* Defining music system */
 volatile int midi[127];
