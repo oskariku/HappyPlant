@@ -8,6 +8,11 @@
  *  
   */
 
+unsigned long ScreenTimer;
+unsigned long PrintButtonTimer;
+#define SCREEN_UPD_INTERV = 2000;
+#define PRINT_BUTTON_INTERV = 5000;
+
 const int MaxMoisture = 515;
 const int OptimalHighLimit = 0;
 const int OptimalLowLimit = 0;
@@ -15,6 +20,16 @@ const int MinMoisture = 255;
 
 int interval = (MaxMoisture - MinMoisture)/4; // Values (wet to dry): 255-320-385-450-515
 int soilMoistureValue = 0;
+
+//States for OLED and buttons
+#define STATE_TEMP = 0;
+#define STATE_MOIST = 1;
+
+#define STATE_TEMP_AVG_D = 2;
+#define STATE_MOIST_AVG_D = 3;
+#define STATE_TEMP_AVG_W = 4;
+#define STATE_MOIST_AVG_W = 5;
+byte NextState = STATE_TEMP;
 
 /* PIN Definitions */
 const int heatSensorPin(A0);
@@ -75,9 +90,6 @@ const byte DED[] = {
 };
 
 /* Defining OLED printing */
-#define STATE_TEMP = 0;
-#define STATE_MOIST = 1;
-byte NextState = STATE_TEMP;
 
 U8G2_SSD1306_128X32_UNIVISION_F_HW_I2C u8g2(U8G2_R0); 
 
@@ -115,6 +127,9 @@ volatile byte tilutus_notes[] = { 57, 64, 60, 64, 64, 64, 60, 64,
 
 void setup() {
   Serial.begin(9600);
+
+  ScreenTimer = millis();
+  PrintButtonTimer = millis();
   
   //Turning 8x8 Display On
   display.clearDisplay(0);
@@ -176,6 +191,18 @@ void setup() {
 }
 
 void loop() {
+
+  if(millis()-ScreenTimer > SCREEN_UPD_INTERV) {
+    updateOled();
+    ScreenTimer = millis();
+  }
+
+  if(millis() - PrintButtonTimer > PRINT_BUTTON_INTERV) {
+    NextState = STATE_MOIST;
+    updateOled();
+    ScreenTimer = millis();
+  }
+  
   //while loop conditions for smileys' drawing
   while (Serial.available() > 0) {
     int soilMoistureValue = Serial.parseInt();
@@ -243,7 +270,23 @@ void updateOled() {
   u8g2.clearBuffer();          // clear the internal memory
 
 
-  if(NextState == STATE_TEMP) {
+  if (NextState == STATE_TEMP_AVG_D) {
+    // Print daily average temperature
+    ;
+
+  } else if (NextState == STATE_MOIST_AVG_D) {
+    //Print daily average moisture
+    ;
+
+  } else if (NextState == STATE_TEMP_AVG_W) {
+    //Print weekly average temperature
+    ;
+
+  } else if (NextState == STATE_MOIST_AVG_W) {
+    //Print weekly average moisture
+    ;
+    
+  } else if(NextState == STATE_TEMP) {
     // Print temperature
 
     u8g2.setFont(u8g2_font_open_iconic_weather_4x_t);
@@ -263,7 +306,7 @@ void updateOled() {
 
     NextState = STATE_MOIST;
     
-  } else {
+  } else if(nextState == STATE_MOIST) {
     //Print moisture
   
     char watersymbol[4]="";
