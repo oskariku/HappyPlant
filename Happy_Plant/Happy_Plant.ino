@@ -1,8 +1,35 @@
 //final code
 
-/* Defining music system */
-const int buzzer = 9; //buzzer to arduino pin 9
 
+/* 
+ *  
+ * Main variable definitions 
+ *  
+  */
+
+const int MaxMoisture = 515;
+const int OptimalHighLimit = 0;
+const int OptimalLowLimit = 0;
+const int MinMoisture = 255;
+
+int interval = (MaxMoisture - MinMoisture)/4; // Values (wet to dry): 255-320-385-450-515
+int soilMoistureValue = 0;
+
+/* PIN Definitions */
+const int heatSensorPin(A0);
+const int soilSensorPin(A1);
+const int buzzer = 9;
+
+/* Defining OLED printing */
+#define STATE_TEMP = 0;
+#define STATE_MOIST = 1;
+byte NextState = STATE_TEMP;
+
+U8G2_SSD1306_128X32_UNIVISION_F_HW_I2C u8g2(U8G2_R0); 
+
+
+
+/* Defining music system */
 volatile int midi[127];
 
 struct Melody {
@@ -39,6 +66,9 @@ void setup() {
 
   // Pin definitions
   pinMode(buzzer, OUTPUT); // Set buzzer - pin 9 as an output
+
+  //Start OLED
+  u8g2.begin();
 
   cli();
   //set timer1 interrupt at 250Hz
@@ -103,18 +133,70 @@ ISR(TIMER1_COMPA_vect){
 }
 
 float heatSensor() {
+    
+    // Heat sensor
+    int heatValue = analogRead(heatSensorPin);
+    float voltage = (heatValue/1024.0) * 5.0;   //  converts the ADC reading (analog-to-digital conversion) to voltage
+    float temperature = (voltage - 0.5) * 100;   // converts the voltage to temperature in degrees
+    
+    return temperature;
+  }
+  
+  int soilSensor() {
 
-}
-
-int soilSensor() {
-
-}
+    //  Soil moisture sensor
+    int soilValue;
+    soilValue = analogRead(soilSensorPin); // connect sensor to Analog port-1
+    return soilValue;
+  }
 
 void save() {
 
 }
-void printing() {
+void updateOled() {
+  // Print heat sensor and soil moisture values to OLED screen
 
+  u8g2.clearBuffer();          // clear the internal memory
+
+
+  if(NextState == STATE_TEMP) {
+    // Print temperature
+
+    u8g2.setFont(u8g2_font_open_iconic_weather_4x_t);
+    u8g2.setCursor(0,32);
+    char sunsymbol[1];
+    sprintf(sunsymbol, "%c", 69);
+    u8g2.print(sunsymbol);
+    
+    u8g2.setFont(u8g2_font_ncenR14_tf);
+    u8g2.setCursor(50,30);
+    u8g2.print(heatSensor());
+    
+    u8g2.drawStr(100,30,"C");
+    
+    u8g2.setCursor(115,30);
+    u8g2.print("\xb0");
+
+    NextState = STATE_MOIST;
+    
+  } else {
+    //Print moisture
+  
+    char watersymbol[4]="";
+    
+    for (int i=MaxMoisture; i>=soilSensor(); i=i-interval) {
+    sprintf(watersymbol, "%s %c", watersymbol, 72);
+    }
+    u8g2.clearBuffer();
+    u8g2.setFont(u8g2_font_open_iconic_thing_4x_t);
+    u8g2.setCursor(0,32);
+    u8g2.print(watersymbol);
+    u8g2.sendBuffer();
+
+    NextState = STATE_TEMP;
+  }
+  
+  u8g2.sendBuffer();         // transfer internal memory to the display
 }
 
 void  drawScreen(byte buffer2[]) {
