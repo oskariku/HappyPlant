@@ -18,8 +18,8 @@
 
 #define sampleTime 3600000
 int printPin = 2;
-int erasePin = 4;
-int adress = 0;     //EEPROM address counter
+int erasePin = 3;
+int address = 0;     //EEPROM address counter
 
 unsigned long timer;
 
@@ -335,7 +335,7 @@ int soilSensor() {
     for(int i=0; i < EEPROM.length(); i++) {
       byte value = EEPROM.read(i);              //  read EEPROM data at address i
       if(value != 0) {
-        Serial.println(temperature);
+        Serial.println(heatSensor());
       }
     }
   }
@@ -346,18 +346,18 @@ int soilSensor() {
         EEPROM.write(i, 0);                 //  write 0 to address i
       }
     }
-    Serial.println("Laitteen muisti tyhjennetty.")
+    Serial.println("Laitteen muisti tyhjennetty.");
     address = 0;
   }
   void writeValue() {
     byte value = analogRead(heatSensor);      //  Read heat sensor value
     EEPROM.write(address, value);
 
-    Serial.print("Heat sensor value stored at address: ")
+    Serial.print("Heat sensor value stored at address: ");
     Serial.println(address);
 
-    adress++;
-    if(address == EEMPROM.lenght()) {       //  check if address counter has reached the end of EEPROM
+    address++;
+    if(address == EEPROM.length()) {       //  check if address counter has reached the end of EEPROM
       address=0;                            //  if yes: reset address counter
     }
   }

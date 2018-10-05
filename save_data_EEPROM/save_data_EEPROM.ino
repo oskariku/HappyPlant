@@ -24,15 +24,16 @@ void loop() {
   }
   
   if(!digitalRead(printPin)) {
-    //-----PrintButtonTimer = millis();
-    //-----printValue(); // STATE_TEMP_AVG_D
+    PrintButtonTimer = millis();
+    printValue(); // STATE_TEMP_AVG_D
   }
   
   if(!digitalRead(erasePin)) {
     clearEEPROM();
     delay(500);
   }
-  void printValue() {
+}
+void printValue() {
     if(NextState == STATE_TEMP || NextState == STATE_MOIST) {
       NextState = STATE_TEMP_AVG_D;
     } else if (NextState == STATE_TEMP_AVG_D) {
@@ -73,4 +74,3 @@ void loop() {
       address=0;                            //  if yes: reset address counter
     }
   }
-}
