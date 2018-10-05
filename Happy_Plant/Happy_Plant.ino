@@ -5,7 +5,9 @@
 #include <EEPROM.h>
 
 //final code
+#include <EEPROM.h>
 #include <LedControl.h> // Library for 8x8 matrix control
+#include <U8g2lib.h>
 
 
 /*
@@ -27,10 +29,10 @@ void writeValue();
 unsigned long ScreenTimer;
 unsigned long PrintButtonTimer;
 unsigned long PlayMelodyTimer;
-#define SCREEN_UPD_INTERV = 2000;
-#define PRINT_BUTTON_INTERV = 5000;
-#define MELODY_TRIG_INTERV = 3000; //How often moisture change will be tested
-#define MOISTURE_CHANGE = 50; //How much moisture value must change in order to play a melody?
+#define SCREEN_UPD_INTERV 2000
+#define PRINT_BUTTON_INTERV 5000
+#define MELODY_TRIG_INTERV 3000 //How often moisture change will be tested
+#define MOISTURE_CHANGE 50 //How much moisture value must change in order to play a melody?
 
 const int MinMoisture = 515;
 const int OptimalHighLimit = 0;
@@ -40,24 +42,24 @@ const int MaxMoisture= 255;
 
 int interval = (MinMoisture - MinMoisture)/4; // Values (wet to dry): 255-320-385-450-515
 
-const int PrevMoisture = 0;
+int PrevMoisture = 0;
 
-float temp_avg_d = 0;
-float moist_avg_d = 0;
-float temp_avg_w = 0;
-float moist_avg_w = 0;
+volatile float temp_avg_d = 0;
+volatile float moist_avg_d = 0;
+volatile float temp_avg_w = 0;
+volatile float moist_avg_w = 0;
 
 int soilMoistureValue = 0;
 
 //States for OLED and buttons
-#define STATE_TEMP = 0;
-#define STATE_MOIST = 1;
+#define STATE_TEMP 0
+#define STATE_MOIST 1
 
-#define STATE_TEMP_AVG_D = 2;
-#define STATE_MOIST_AVG_D = 3;
-#define STATE_TEMP_AVG_W = 4;
-#define STATE_MOIST_AVG_W = 5;
-byte NextState = STATE_TEMP;
+#define STATE_TEMP_AVG_D 2
+#define STATE_MOIST_AVG_D 3
+#define STATE_TEMP_AVG_W 4
+#define STATE_MOIST_AVG_W 5
+volatile byte NextState = STATE_TEMP;
 
 /* PIN Definitions */
 const int heatSensorPin(A0);
@@ -69,7 +71,10 @@ const int DIN_PIN = 12;
 const int CLK_PIN = 11;
 const int CS_PIN = 10;
 
+
+/* Setupping 8x8 led matrix */
 LedControl display = LedControl(DIN_PIN, CLK_PIN, CS_PIN);
+
 
 /* Binary images of Led faces */
 const byte SAD[] = {
@@ -134,6 +139,10 @@ struct Melody {
   float scalar; //scalar to scale length according to the tempo
   int curNote; //What note is currently playing
 };
+
+void playMelody(Melody *currentmelody, byte notes[]);
+void nextNote(Melody *currentmelody, byte notes[]);
+
 
 volatile Melody healing;// pokemon healing
 volatile byte healing_notes[24] = {71, 8, 128, 8, 71, 8, 128, 8, 71, 8, 68, 8, 76, 2, 128, 4, 128, 2, 128, 4, 128, 2, 128, 4 };
@@ -290,8 +299,6 @@ ISR(TIMER1_COMPA_vect) {
 
   if (healing.playing) {
     playMelody(&healing, healing_notes);
-    //playMelody(&totoAfrica, totoAfrica_notes);
-    //playMelody(&tilutus, tilutus_notes);
   }
 }
 
@@ -369,7 +376,7 @@ void countAverages() {
 
   // 24 / SAVE_INTERVAL * 2 = how many values saved in last 24 hours
   // 24 * 7 / SAVE_INTERVAL * 2 = how many values saved in last week
-  byte values[];
+  //byte values[];
 }
 
 void updateOled() {
@@ -385,15 +392,15 @@ void updateOled() {
 
   } else if (NextState == STATE_MOIST_AVG_D) {
     //Print daily average moisture
-    Serial.print(temp_moist_d);
+    Serial.print(moist_avg_d);
 
   } else if (NextState == STATE_TEMP_AVG_W) {
     //Print weekly average temperature
-    Serial.print(temp_temp_w);
+    Serial.print(temp_avg_w);
 
   } else if (NextState == STATE_MOIST_AVG_W) {
     //Print weekly average moisture
-    Serial.print(temp_moist_w);
+    Serial.print(moist_avg_w);
 
   } else if (NextState == STATE_TEMP) {
     // Print temperature
@@ -415,7 +422,7 @@ void updateOled() {
 
     NextState = STATE_MOIST;
 
-  } else if (nextState == STATE_MOIST) {
+  } else if (NextState == STATE_MOIST) {
     //Print moisture
   
     char watersymbol[4]="";
