@@ -1,15 +1,11 @@
+//final code
+
 #include <Arduino.h>
 #include <U8g2lib.h>
 #include <SPI.h>
 #include <Wire.h>
 #include <EEPROM.h>
-
-//final code
-#include <EEPROM.h>
 #include <LedControl.h> // Library for 8x8 matrix control
-#include <U8g2lib.h>
-
-
 /*
 
    Main variable definitions
@@ -32,27 +28,27 @@ unsigned long PlayMelodyTimer;
 
 #define SCREEN_UPD_INTERV 2000
 #define PRINT_BUTTON_INTERV 5000
-#define MELODY_TRIG_INTERV 3000 //How often moisture change will be tested
-#define MOISTURE_CHANGE 50 //How much moisture value must change in order to play a melody?
+#define MELODY_TRIG_INTERV 60000 //How often moisture change will be tested
+#define MOISTURE_CHANGE 70 //How much moisture value must change in order to play a melody?
 
-const int MinMoisture = 515;
-const int OptimalHighLimit = 0;
-const int OptimalLowLimit = 0;
+const int MinMoisture = 535;
 
-const int MaxMoisture= 255;
+const int MinMoistureEmoji = 500;
+const int MaxMoistureEmoji = 290;
+
+const int OptimalHighEmoji = 360;
+const int OptimalLowEmoji = 430;
+
+            //----------const int MaxMoisture= 255;
 
 int interval = (MinMoisture - MinMoisture)/4; // Values (wet to dry): 255-320-385-450-515
 
 int PrevMoisture = 0;
 
-
 volatile float temp_avg_d = 0;
 volatile float moist_avg_d = 0;
 volatile float temp_avg_w = 0;
 volatile float moist_avg_w = 0;
-
-
-int soilMoistureValue = 0;
 
 //States for OLED and buttons
 #define STATE_TEMP 0
@@ -271,24 +267,23 @@ void loop() {
   }
 
   /* Led Screen */
-  int soilMoistureValue = Serial.parseInt();
 
-  if (soilMoistureValue >= MaxMoisture)
+  if (soilSensor() < MaxMoistureEmoji)
   {
     drawScreen(DED);
     Serial.print("DED");
   }
-  else if (soilMoistureValue >= OptimalHighLimit)
+  else if (soilSensor() >= MaxMoistureEmoji && soilSensor() < OptimalHighEmoji)
   {
     drawScreen(NEUTRAL);
     Serial.print("NEUTRAL");
   }
-  else if (soilMoistureValue > OptimalLowLimit)
+  else if (soilSensor() >= OptimalHighEmoji && soilSensor() < OptimalLowEmoji)
   {
     drawScreen(HAPPY);
     Serial.print("HAPPY");
   }
-  else if (soilMoistureValue > MinMoisture)
+  else if (soilSensor() > OptimalLowEmoji)
   {
     drawScreen(SAD);
     Serial.print("SAD");
@@ -311,14 +306,15 @@ float heatSensor() {
   float temperature = (voltage - 0.5) * 100;   // converts the voltage to temperature in degrees
 
   return temperature;
+  Serial.print(heatSensor());
 }
-
 int soilSensor() {
 
   //  Soil moisture sensor
   int soilValue;
-  soilValue = analogRead(soilSensorPin); // connect sensor to Analog port-1
+  soilValue = analogRead(soilSensorPin); // connect sensor to Analog port-1  
   return soilValue;
+  Serial.print(soilSensor());
 }
 
   void printValue() {
@@ -432,7 +428,7 @@ void updateOled() {
   
     char watersymbol[4]="";
     
-    for (int i=MinMoisture; i>=soilSensor(); i=i-interval) {
+    for(int i=MinMoisture; i>=soilSensor(); i=i-interval) {
     sprintf(watersymbol, "%s %c", watersymbol, 72);
     }
     
