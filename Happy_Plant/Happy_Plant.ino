@@ -2,23 +2,32 @@
 #include <LedControl.h> // Library for 8x8 matrix control
 
 
-/* 
- *  
- * Main variable definitions 
- *  
-  */
+/*
+
+   Main variable definitions
+
+*/
 
 unsigned long ScreenTimer;
 unsigned long PrintButtonTimer;
+unsigned long PlayMelodyTimer;
 #define SCREEN_UPD_INTERV = 2000;
 #define PRINT_BUTTON_INTERV = 5000;
+#define MELODY_TRIG_INTERV = 3000; //How often moisture change will be tested
+#define MOISTURE_CHANGE = 50; //How much moisture value must change in order to play a melody?
 
 const int MaxMoisture = 515;
 const int OptimalHighLimit = 0;
 const int OptimalLowLimit = 0;
 const int MinMoisture = 255;
+const int PrevMoisture = 0;
 
-int interval = (MaxMoisture - MinMoisture)/4; // Values (wet to dry): 255-320-385-450-515
+float temp_avg_d = 0;
+float moist_avg_d = 0;
+float temp_avg_w = 0;
+float moist_avg_w = 0;
+
+int interval = (MaxMoisture - MinMoisture) / 4; // Values (wet to dry): 255-320-385-450-515
 int soilMoistureValue = 0;
 
 //States for OLED and buttons
@@ -91,7 +100,7 @@ const byte DED[] = {
 
 /* Defining OLED printing */
 
-U8G2_SSD1306_128X32_UNIVISION_F_HW_I2C u8g2(U8G2_R0); 
+U8G2_SSD1306_128X32_UNIVISION_F_HW_I2C u8g2(U8G2_R0);
 
 /* Defining music system */
 volatile int midi[127];
@@ -101,7 +110,7 @@ struct Melody {
   int mlength; //Length of array
   byte tempo; // Tempo as bpm
   bool playing; //Is the melody playing?
-  
+
   int gap; // gap before the next note
   float scalar; //scalar to scale length according to the tempo
   int curNote; //What note is currently playing
@@ -120,7 +129,7 @@ volatile byte tilutus_notes[] = { 57, 64, 60, 64, 64, 64, 60, 64,
                                   57, 128, 60, 128, 64, 128, 60, 128,
                                   57, 128, 60, 128, 64, 128, 60, 128,
                                   57, 128, 60, 128, 64, 128, 60, 128
-                                  };
+                                };
 
 
 
@@ -130,11 +139,12 @@ void setup() {
 
   ScreenTimer = millis();
   PrintButtonTimer = millis();
-  
+  PlayMelodyTimer = millis();
+
   //Turning 8x8 Display On
   display.clearDisplay(0);
   display.shutdown(0, false);
-  display.setIntensity(0,5);
+  display.setIntensity(0, 5);
 
   // Pin definitions
   pinMode(buzzer, OUTPUT); // Set buzzer - pin 9 as an output
@@ -160,31 +170,31 @@ void setup() {
 
   sei();//allow interrupts
 
-  
+
   /* Initializing music system */
   healing.mlength = 24; //length of the array
   healing.tempo = 120; // as bpm
   healing.curNote = 0;
   healing.gap = 0;
   healing.scalar = healing.tempo / 60;
-  healing.playing = true;
-  
+  healing.playing = false;
+
   totoAfrica.mlength = 22;
   totoAfrica.tempo = 98;
-  totoAfrica.playing = true;
-  
+  totoAfrica.playing = false;
+
   totoAfrica.curNote = 0;
   totoAfrica.gap = 0;
   totoAfrica.scalar = totoAfrica.tempo / 60;
 
   tilutus.mlength = 64;
   tilutus.tempo = 120;
-  tilutus.playing = true;
+  tilutus.playing = false;
 
   tilutus.curNote = 0;
   tilutus.gap = 0;
   tilutus.scalar = tilutus.tempo / 60;
-  
+
   //Set midi table
   setMidiNotes();
 
@@ -192,51 +202,58 @@ void setup() {
 
 void loop() {
 
-  if(millis()-ScreenTimer > SCREEN_UPD_INTERV) {
+  /* Play melody */
+  if (millis() - PlayMelodyTimer > MELODY_TRIG_INTERV) {
+    if(soilSensor()-PrevMoisture > MOISTURE_CHANGE) {
+      healing.playing = true;
+    }
+    
+    PlayMelodyTimer  = millis();
+    //New value to previous moisture
+    PrevMoisture = soilSensor();
+  }
+
+  /* Oled */
+  if (millis() - ScreenTimer > SCREEN_UPD_INTERV) {
     updateOled();
     ScreenTimer = millis();
   }
 
-  if(millis() - PrintButtonTimer > PRINT_BUTTON_INTERV) {
+  if (millis() - PrintButtonTimer > PRINT_BUTTON_INTERV) {
     NextState = STATE_MOIST;
     updateOled();
     ScreenTimer = millis();
   }
-  
-  //while loop conditions for smileys' drawing
-  while (Serial.available() > 0) {
-    int soilMoistureValue = Serial.parseInt();
-    Serial.print("Reading values ");
-    Serial.print(soilMoistureValue);
-    
-        Serial.println("out of loop");
-      if (soilMoistureValue >= 240)
-      {
-        drawScreen(DED);
-        Serial.print("DED");
-      }
-      else if (soilMoistureValue >= 160)
-      {
-        drawScreen(NEUTRAL);
-        Serial.print("NEUTRAL");
-      }
-      else if (soilMoistureValue > 140)
-      {
-        drawScreen(SAD);
-        Serial.print("SAD");
-      }
-      else if (soilMoistureValue > 100)
-      {
-        drawScreen(HAPPY);
-        Serial.print("HAPPY");
-      }
-    }
+
+  /* Led Screen */
+  int soilMoistureValue = Serial.parseInt();
+
+  if (soilMoistureValue >= MaxMoisture)
+  {
+    drawScreen(DED);
+    Serial.print("DED");
+  }
+  else if (soilMoistureValue >= OptimalHighLimit)
+  {
+    drawScreen(NEUTRAL);
+    Serial.print("NEUTRAL");
+  }
+  else if (soilMoistureValue > OptimalLowLimit)
+  {
+    drawScreen(HAPPY);
+    Serial.print("HAPPY");
+  }
+  else if (soilMoistureValue > MinMoisture)
+  {
+    drawScreen(SAD);
+    Serial.print("SAD");
+  }
 }
 
 /* Timer interrupt for music */
-ISR(TIMER1_COMPA_vect){
+ISR(TIMER1_COMPA_vect) {
 
-  if(healing.playing) {
+  if (healing.playing) {
     playMelody(&healing, healing_notes);
     //playMelody(&totoAfrica, totoAfrica_notes);
     //playMelody(&tilutus, tilutus_notes);
@@ -244,85 +261,100 @@ ISR(TIMER1_COMPA_vect){
 }
 
 float heatSensor() {
-    
-    // Heat sensor
-    int heatValue = analogRead(heatSensorPin);
-    float voltage = (heatValue/1024.0) * 5.0;   //  converts the ADC reading (analog-to-digital conversion) to voltage
-    float temperature = (voltage - 0.5) * 100;   // converts the voltage to temperature in degrees
-    
-    return temperature;
-  }
-  
-  int soilSensor() {
 
-    //  Soil moisture sensor
-    int soilValue;
-    soilValue = analogRead(soilSensorPin); // connect sensor to Analog port-1
-    return soilValue;
-  }
+  // Heat sensor
+  int heatValue = analogRead(heatSensorPin);
+  float voltage = (heatValue / 1024.0) * 5.0; //  converts the ADC reading (analog-to-digital conversion) to voltage
+  float temperature = (voltage - 0.5) * 100;   // converts the voltage to temperature in degrees
+
+  return temperature;
+}
+
+int soilSensor() {
+
+  //  Soil moisture sensor
+  int soilValue;
+  soilValue = analogRead(soilSensorPin); // connect sensor to Analog port-1
+  return soilValue;
+}
 
 void save() {
 
+  //Count new average values after saving
+  countAverages();
 }
+
+void countAverages() {
+  temp_avg_d = 0;
+  moist_avg_d = 0;
+  temp_avg_w = 0;
+  moist_avg_w = 0;
+
+  // 24 / SAVE_INTERVAL * 2 = how many values saved in last 24 hours
+  // 24 * 7 / SAVE_INTERVAL * 2 = how many values saved in last week
+  byte values[];
+}
+
 void updateOled() {
   // Print heat sensor and soil moisture values to OLED screen
 
   u8g2.clearBuffer();          // clear the internal memory
 
-
+  u8g2.setFont(u8g2_font_ncenR14_tf);
+  
   if (NextState == STATE_TEMP_AVG_D) {
     // Print daily average temperature
-    ;
+    Serial.print(temp_avg_d);
 
   } else if (NextState == STATE_MOIST_AVG_D) {
     //Print daily average moisture
-    ;
+    Serial.print(temp_moist_d);
 
   } else if (NextState == STATE_TEMP_AVG_W) {
     //Print weekly average temperature
-    ;
+    Serial.print(temp_temp_w);
 
   } else if (NextState == STATE_MOIST_AVG_W) {
     //Print weekly average moisture
-    ;
-    
-  } else if(NextState == STATE_TEMP) {
+    Serial.print(temp_moist_w);
+
+  } else if (NextState == STATE_TEMP) {
     // Print temperature
 
     u8g2.setFont(u8g2_font_open_iconic_weather_4x_t);
-    u8g2.setCursor(0,32);
+    u8g2.setCursor(0, 32);
     char sunsymbol[1];
     sprintf(sunsymbol, "%c", 69);
     u8g2.print(sunsymbol);
-    
+
     u8g2.setFont(u8g2_font_ncenR14_tf);
-    u8g2.setCursor(50,30);
+    u8g2.setCursor(50, 30);
     u8g2.print(heatSensor());
-    
-    u8g2.drawStr(100,30,"C");
-    
-    u8g2.setCursor(115,30);
+
+    u8g2.drawStr(100, 30, "C");
+
+    u8g2.setCursor(115, 30);
     u8g2.print("\xb0");
 
     NextState = STATE_MOIST;
-    
-  } else if(nextState == STATE_MOIST) {
+
+  } else if (nextState == STATE_MOIST) {
     //Print moisture
-  
-    char watersymbol[4]="";
-    
-    for (int i=MaxMoisture; i>=soilSensor(); i=i-interval) {
-    sprintf(watersymbol, "%s %c", watersymbol, 72);
+
+    char watersymbol[4] = "";
+
+    for (int i = MaxMoisture; i >= soilSensor(); i = i - interval) {
+      sprintf(watersymbol, "%s %c", watersymbol, 72);
     }
     u8g2.clearBuffer();
     u8g2.setFont(u8g2_font_open_iconic_thing_4x_t);
-    u8g2.setCursor(0,32);
+    u8g2.setCursor(0, 32);
     u8g2.print(watersymbol);
     u8g2.sendBuffer();
 
     NextState = STATE_TEMP;
   }
-  
+
   u8g2.sendBuffer();         // transfer internal memory to the display
 }
 
@@ -336,9 +368,9 @@ void  drawScreen(byte buffer2[])
     {
       display.setLed(0, i, a, bitRead(buffer2[i], 7 - a));
       /* Debug outputs
-      Serial.print(" col ");
-      Serial.print(i);
-      Serial.print(a);
+        Serial.print(" col ");
+        Serial.print(i);
+        Serial.print(a);
       */
     }
     //Serial.println();
@@ -346,9 +378,9 @@ void  drawScreen(byte buffer2[])
   }
 }
 
-/* Music system related functions begin here */ 
+/* Music system related functions begin here */
 void playMelody(Melody *currentmelody, byte notes[]) {
-  if(currentmelody->gap <= 0) {
+  if (currentmelody->gap <= 0) {
     nextNote(currentmelody, notes);
   }
   currentmelody->gap--;
@@ -361,16 +393,16 @@ void nextNote(Melody *currentmelody, byte notes[]) {
   int note = notes[currentmelody->curNote];
 
   noTone(buzzer);
-  
+
   //note 128 is rest
-  if(note < 128) {
+  if (note < 128) {
     tone(buzzer, height);
   }
 
   currentmelody->gap = 256 / noteLength / currentmelody->scalar;
-  
+
   currentmelody->curNote += 2;
-  if(currentmelody->curNote > currentmelody->mlength) {
+  if (currentmelody->curNote > currentmelody->mlength) {
     currentmelody->curNote = 0;
     currentmelody->playing = false;
     noTone(buzzer);
