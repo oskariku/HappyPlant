@@ -8,12 +8,12 @@
  *  
   */
 
-const int MaxMoisture = 515;
+const int MinMoisture = 515;
 const int OptimalHighLimit = 0;
 const int OptimalLowLimit = 0;
-const int MinMoisture = 255;
+const int MaxMoisture= 255;
 
-int interval = (MaxMoisture - MinMoisture)/4; // Values (wet to dry): 255-320-385-450-515
+int interval = (MinMoisture - MinMoisture)/4; // Values (wet to dry): 255-320-385-450-515
 int soilMoistureValue = 0;
 
 /* PIN Definitions */
@@ -268,7 +268,7 @@ void updateOled() {
   
     char watersymbol[4]="";
     
-    for (int i=MaxMoisture; i>=soilSensor(); i=i-interval) {
+    for (int i=MinMoisture; i>=soilSensor(); i=i-interval) {
     sprintf(watersymbol, "%s %c", watersymbol, 72);
     }
     u8g2.clearBuffer();
