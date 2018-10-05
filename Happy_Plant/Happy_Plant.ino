@@ -29,6 +29,7 @@ void writeValue();
 unsigned long ScreenTimer;
 unsigned long PrintButtonTimer;
 unsigned long PlayMelodyTimer;
+
 #define SCREEN_UPD_INTERV 2000
 #define PRINT_BUTTON_INTERV 5000
 #define MELODY_TRIG_INTERV 3000 //How often moisture change will be tested
@@ -44,10 +45,12 @@ int interval = (MinMoisture - MinMoisture)/4; // Values (wet to dry): 255-320-38
 
 int PrevMoisture = 0;
 
+
 volatile float temp_avg_d = 0;
 volatile float moist_avg_d = 0;
 volatile float temp_avg_w = 0;
 volatile float moist_avg_w = 0;
+
 
 int soilMoistureValue = 0;
 
@@ -127,7 +130,6 @@ const byte DED[] = {
 U8G2_SSD1306_128X32_UNIVISION_F_HW_I2C u8g2(U8G2_R0);
 
 /* Defining music system */
-volatile int midi[127];
 
 struct Melody {
   byte notes[64]; //Array of notes
@@ -149,7 +151,7 @@ volatile byte healing_notes[24] = {71, 8, 128, 8, 71, 8, 128, 8, 71, 8, 68, 8, 7
 volatile Melody totoAfrica; // Toto: Africa
 volatile byte totoAfrica_notes[22] = { 61, 6, 61, 16, 0, 32, 128, 32, 61, 16, 0, 32, 128, 32, 61, 16, 61, 8, 59, 8, 64, 4  }; // Toto africa
 volatile Melody tilutus;
-volatile byte tilutus_notes[] = { 57, 64, 60, 64, 64, 64, 60, 64,
+/*volatile byte tilutus_notes[] = { 57, 64, 60, 64, 64, 64, 60, 64,
                                   57, 64, 60, 64, 64, 64, 60, 64,
                                   57, 64, 60, 64, 64, 64, 60, 64,
                                   57, 64, 60, 64, 64, 64, 60, 64,
@@ -159,7 +161,7 @@ volatile byte tilutus_notes[] = { 57, 64, 60, 64, 64, 64, 60, 64,
                                   57, 128, 60, 128, 64, 128, 60, 128
                                 };
 
-
+*/
 
 
 void setup() {
@@ -226,7 +228,6 @@ void setup() {
   tilutus.scalar = tilutus.tempo / 60;
 
   //Set midi table
-  setMidiNotes();
 
 }
 
@@ -387,18 +388,22 @@ void updateOled() {
   u8g2.setFont(u8g2_font_ncenR14_tf);
   
   if (NextState == STATE_TEMP_AVG_D) {
+    temp_avg_d = 0;
     // Print daily average temperature
     Serial.print(temp_avg_d);
 
   } else if (NextState == STATE_MOIST_AVG_D) {
+    moist_avg_d = 0;
     //Print daily average moisture
     Serial.print(moist_avg_d);
 
   } else if (NextState == STATE_TEMP_AVG_W) {
+    temp_avg_w = 0;
     //Print weekly average temperature
     Serial.print(temp_avg_w);
 
   } else if (NextState == STATE_MOIST_AVG_W) {
+    moist_avg_w;
     //Print weekly average moisture
     Serial.print(moist_avg_w);
 
@@ -473,7 +478,7 @@ void playMelody(Melody *currentmelody, byte notes[]) {
 }
 
 void nextNote(Melody *currentmelody, byte notes[]) {
-  int height = midi[notes[currentmelody->curNote]];
+  int height = midi(notes[currentmelody->curNote]);
   int noteLength = notes[currentmelody->curNote + 1];
   int note = notes[currentmelody->curNote];
 
@@ -495,7 +500,10 @@ void nextNote(Melody *currentmelody, byte notes[]) {
 }
 
 /* Helper function for music system */
-void setMidiNotes() {
+
+int midi(byte note) {
+  //Returns midi note by frequency
+  int midi[127];
   midi[0] = 8;
   midi[1] = 8;
   midi[2] = 9;
@@ -624,4 +632,5 @@ void setMidiNotes() {
   midi[125] = 11175;
   midi[126] = 11839;
   midi[127] = 12543;
+  return midi[note];
 }
