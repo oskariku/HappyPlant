@@ -234,7 +234,10 @@ void loop() {
   
   if(!digitalRead(printPin)) {
     PrintButtonTimer = millis();
-    printValue(); // STATE_TEMP_AVG_D
+    //Set right state to the screen
+    printValue();
+    //Update OLED according to a state
+    updateOled();
   }
   
   if(!digitalRead(erasePin)) {
@@ -244,7 +247,7 @@ void loop() {
 
   /* Play melody */
   if (millis() - PlayMelodyTimer > MELODY_TRIG_INTERV) {
-    if(soilSensor()-PrevMoisture-MinMoisture > MOISTURE_CHANGE) {
+    if(soilSensor()-PrevMoisture-MaxMoisture > MOISTURE_CHANGE) {
       healing.playing = true;
     }
     
@@ -312,73 +315,91 @@ int soilSensor() {
   Serial.print(soilSensor());
 }
 
-  void printValue() {
-    if(NextState == STATE_TEMP || NextState == STATE_MOIST) {
+void printValue() {
+  switch(NextState) {
+    case STATE_TEMP:
+    case STATE_MOIST:
       NextState = STATE_TEMP_AVG_D;
-    } else if (NextState == STATE_TEMP_AVG_D) {
+      break;
+    case STATE_TEMP_AVG_D:
       NextState = STATE_TEMP_AVG_W;
-    } else if (NextState == STATE_TEMP_AVG_W) {
+      break;
+    case STATE_TEMP_AVG_W:
       NextState = STATE_MOIST_AVG_D;
-    } else if (NextState == STATE_MOIST_AVG_D) {
+      break;
+    case STATE_MOIST_AVG_D:
       NextState = STATE_MOIST_AVG_W;
-    } else if (NextState == STATE_MOIST_AVG_W) {
+      break;
+    case STATE_MOIST_AVG_W:
       NextState = STATE_TEMP;
-    }
+      break;
+  }
+
+  /*
+   * Not sure what this code is for...
     for(int i=0; i < EEPROM.length(); i++) {
-      byte value = EEPROM.read(i);              //  read EEPROM data at address i
-      if(value != 0) {
-        Serial.println(heatSensor());
-      }
+    byte value = EEPROM.read(i);              //  read EEPROM data at address i
+    if(value != 0) {
+      Serial.println(heatSensor());
     }
-  }
-
-  void clearEEPROM() {
-    for(int i=0; i < EEPROM.length(); i++) {
-      if (EEPROM.read(i) != 0) {
-        EEPROM.write(i, 0);                 //  write 0 to address i
-      }
-    }
-    Serial.println("Laitteen muisti tyhjennetty.");
-    address = 0;
-  }
-  void writeValue() {
-    byte value = analogRead(heatSensor);      //  Read heat sensor value
-    EEPROM.write(address, value);
-
-    Serial.print("Heat sensor value stored at address: ");
-    Serial.println(address);
-
-    address++;
-    if(address == EEPROM.length()) {       //  check if address counter has reached the end of EEPROM
-      address=0;                            //  if yes: reset address counter
-    }
-  }
-
-void countAverages() {
-  temp_avg_d = 24 / sampleTime * 2;
-  moist_avg_d = 24 / sampleTime * 2;
-  temp_avg_w = 24*7 / sampleTime * 2;
-  moist_avg_w = 24*7 / sampleTime * 2;
-
-  // 24 / sampleTime * 2 = how many values saved in last 24 hours
-  // 24 * 7 / sampleTime * 2 = how many values saved in last week
-  //byte values[];
+  }*/
 }
 
-void save() {
+void clearEEPROM() {
+  for(int i=0; i < EEPROM.length(); i++) {
+    if (EEPROM.read(i) != 0) {
+      EEPROM.write(i, 0);                 //  write 0 to address i
+    }
+  }
+  Serial.println("Laitteen muisti tyhjennetty.");
+  address = 0;
+}
 
-  //Count new average values after saving
+void writeValue() {
+  byte heatValue = heatSensor();      //  Read heat sensor value
+  byte moistvalue = soilSensor();
+  EEPROM.write(address, value);
 
-  for(int i = address-1; i > sampleTime; address-=2) {
+  Serial.print("Heat sensor value stored at address: ");
+  Serial.println(address);
+
+  address++;
+  if(address == EEPROM.length()) {       //  check if address counter has reached the end of EEPROM
+    address=0;                            //  if yes: reset address counter
+  }
+}
+
+void countAverages() {
+
+  temp_avg_d = 0;
+  moist_avg_d = 0;
+  temp_avg_w = 0;
+  moist_avg_w = 0;
+
+  //How many samples are saved during a day/week
+  int sample_amount_d = 86400000 / sampleTime * 2;
+  int sample_amount_w = 604800000 / sampleTime * 2; // There are 604800000 milliseconds in a week.
+
+  int samples = address - sample_amount_w;
+  if(samples < 0) {
+    samples = 0;
+  }
+
+  for(int i = address-1; i > samples; i-=2) {
     float temperature = EEPROM.read(i);
     int moisture = EEPROM.read(i+1);
-    temp_avg_d += temperature;
-    moist_avg_d += moisture;
-
-  temp_avg_d = temp_avg_d / i;
-  moist_avg_d = moist_avg_d / i;
-  countAverages();
+    if (i > address-sample_amount_d) {
+      temp_avg_d += temperature;
+      moist_avg_d += moisture;
+    }
+    temp_avg_w += temperature;
+    moist_avg_w += moisture;
   }
+
+  temp_avg_d = temp_avg_d / (sample_amount_d/2);
+  moist_avg_d = moist_avg_d /(sample_amount_d/2);
+  temp_avg_w = temp_avg_w / (sample_amount_w/2);
+  moist_avg_w = moist_avg_w /(sample_amount_w/2);
 }
 
 void updateOled() {
