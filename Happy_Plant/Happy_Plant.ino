@@ -356,14 +356,19 @@ void clearEEPROM() {
 }
 
 void writeValue() {
-  byte heatValue = heatSensor();      //  Read heat sensor value
-  byte moistvalue = soilSensor();
-  EEPROM.write(address, value);
+  int heat = heatSensor();
+  int moist = soilSensor() / 2.2; // We must scale value to fit it between 0-255
+  byte heatValue = (byte) heat;
+  byte moistValue = (byte) moist;
+  EEPROM.write(address, heatValue);
+  EEPROM.write(address+1, moistValue);
 
   Serial.print("Heat sensor value stored at address: ");
   Serial.println(address);
+  Serial.print("Moisture sensor value stored at address: ");
+  Serial.println(address+1);
 
-  address++;
+  address+=2;
   if(address == EEPROM.length()) {       //  check if address counter has reached the end of EEPROM
     address=0;                            //  if yes: reset address counter
   }
@@ -386,8 +391,10 @@ void countAverages() {
   }
 
   for(int i = address-1; i > samples; i-=2) {
-    float temperature = EEPROM.read(i);
-    int moisture = EEPROM.read(i+1);
+    byte value = EEPROM.read(i);
+    int temperature = (int) value;
+    value = EEPROM.read(i+1);
+    int moisture = value * 3;
     if (i > address-sample_amount_d) {
       temp_avg_d += temperature;
       moist_avg_d += moisture;
@@ -410,22 +417,18 @@ void updateOled() {
   u8g2.setFont(u8g2_font_ncenR14_tf);
   
   if (NextState == STATE_TEMP_AVG_D) {
-    temp_avg_d = 0;
     // Print daily average temperature
     Serial.print(temp_avg_d);
 
   } else if (NextState == STATE_MOIST_AVG_D) {
-    moist_avg_d = 0;
     //Print daily average moisture
     Serial.print(moist_avg_d);
 
   } else if (NextState == STATE_TEMP_AVG_W) {
-    temp_avg_w = 0;
     //Print weekly average temperature
     Serial.print(temp_avg_w);
 
   } else if (NextState == STATE_MOIST_AVG_W) {
-    moist_avg_w;
     //Print weekly average moisture
     Serial.print(moist_avg_w);
 
