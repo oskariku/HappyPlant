@@ -415,22 +415,29 @@ void updateOled() {
   u8g2.clearBuffer();          // clear the internal memory
 
   u8g2.setFont(u8g2_font_ncenR14_tf);
+  u8g2.setCursor(0, 0);
+  char text[20];
+
   
   if (NextState == STATE_TEMP_AVG_D) {
     // Print daily average temperature
     Serial.print(temp_avg_d);
+    sprintf(text, "Daily avg temp: %d", temp_avg_d);
 
   } else if (NextState == STATE_MOIST_AVG_D) {
     //Print daily average moisture
     Serial.print(moist_avg_d);
+    sprintf(text, "Daily avg moist: %d", moist_avg_d);
 
   } else if (NextState == STATE_TEMP_AVG_W) {
     //Print weekly average temperature
     Serial.print(temp_avg_w);
+    sprintf(text, "Weekly avg temp: %d", temp_avg_w);
 
   } else if (NextState == STATE_MOIST_AVG_W) {
     //Print weekly average moisture
     Serial.print(moist_avg_w);
+    sprintf(text, "Weekly avg moist: %d", moist_avg_d);
 
   } else if (NextState == STATE_TEMP) {
     // Print temperature
@@ -465,11 +472,12 @@ void updateOled() {
     u8g2.setFont(u8g2_font_open_iconic_thing_4x_t);
     u8g2.setCursor(0, 32);
     u8g2.print(watersymbol);
-    u8g2.sendBuffer();
-
+    
     NextState = STATE_TEMP;
   }
 
+  //Print text if any:
+  u8g2.print(text);
   u8g2.sendBuffer();         // transfer internal memory to the display
 }
 
