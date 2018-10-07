@@ -32,6 +32,7 @@ unsigned long PlayMelodyTimer;
 #define MOISTURE_CHANGE 70 //How much moisture value must change in order to play a melody?
 
 const int MinMoisture = 535;
+const int MaxMoisture= 255;
 
 const int MinMoistureEmoji = 500;
 const int MaxMoistureEmoji = 290;
@@ -39,11 +40,9 @@ const int MaxMoistureEmoji = 290;
 const int OptimalHighEmoji = 360;
 const int OptimalLowEmoji = 430;
 
-            //----------const int MaxMoisture= 255;
-
 int interval = (MinMoisture - MinMoisture)/4; // Values (wet to dry): 255-320-385-450-515
 
-int PrevMoisture = 0;
+int PrevMoisture = MaxMoisture;
 
 volatile float temp_avg_d = 0;
 volatile float moist_avg_d = 0;
@@ -245,7 +244,7 @@ void loop() {
 
   /* Play melody */
   if (millis() - PlayMelodyTimer > MELODY_TRIG_INTERV) {
-    if(soilSensor()-PrevMoisture > MOISTURE_CHANGE) {
+    if(soilSensor()-PrevMoisture-MinMoisture > MOISTURE_CHANGE) {
       healing.playing = true;
     }
     
@@ -271,22 +270,18 @@ void loop() {
   if (soilSensor() < MaxMoistureEmoji)
   {
     drawScreen(DED);
-    Serial.print("DED");
   }
   else if (soilSensor() >= MaxMoistureEmoji && soilSensor() < OptimalHighEmoji)
   {
     drawScreen(NEUTRAL);
-    Serial.print("NEUTRAL");
   }
   else if (soilSensor() >= OptimalHighEmoji && soilSensor() < OptimalLowEmoji)
   {
     drawScreen(HAPPY);
-    Serial.print("HAPPY");
   }
   else if (soilSensor() > OptimalLowEmoji)
   {
     drawScreen(SAD);
-    Serial.print("SAD");
   }
 }
 
@@ -359,21 +354,31 @@ int soilSensor() {
     }
   }
 
+void countAverages() {
+  temp_avg_d = 24 / sampleTime * 2;
+  moist_avg_d = 24 / sampleTime * 2;
+  temp_avg_w = 24*7 / sampleTime * 2;
+  moist_avg_w = 24*7 / sampleTime * 2;
+
+  // 24 / sampleTime * 2 = how many values saved in last 24 hours
+  // 24 * 7 / sampleTime * 2 = how many values saved in last week
+  //byte values[];
+}
+
 void save() {
 
   //Count new average values after saving
+
+  for(int i = address-1; i > sampleTime; address-=2) {
+    float temperature = EEPROM.read(i);
+    int moisture = EEPROM.read(i+1);
+    temp_avg_d += temperature;
+    moist_avg_d += moisture;
+
+  temp_avg_d = temp_avg_d / i;
+  moist_avg_d = moist_avg_d / i;
   countAverages();
-}
-
-void countAverages() {
-  temp_avg_d = 0;
-  moist_avg_d = 0;
-  temp_avg_w = 0;
-  moist_avg_w = 0;
-
-  // 24 / SAVE_INTERVAL * 2 = how many values saved in last 24 hours
-  // 24 * 7 / SAVE_INTERVAL * 2 = how many values saved in last week
-  //byte values[];
+  }
 }
 
 void updateOled() {
