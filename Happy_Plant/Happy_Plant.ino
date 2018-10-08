@@ -204,7 +204,7 @@ void setup() {
   healing.scalar = healing.tempo / 60;
   healing.playing = false;
 
-  totoAfrica.mlength = 22;
+  /*totoAfrica.mlength = 22;
   totoAfrica.tempo = 98;
   totoAfrica.playing = false;
 
@@ -218,7 +218,7 @@ void setup() {
 
   tilutus.curNote = 0;
   tilutus.gap = 0;
-  tilutus.scalar = tilutus.tempo / 60;
+  tilutus.scalar = tilutus.tempo / 60;*/
 
   //Set midi table
 
