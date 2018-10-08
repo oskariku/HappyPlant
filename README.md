@@ -1,8 +1,8 @@
 # HappyPlant
 
-fi/ Happy Plant oli Metropolia Ammattikorkeakoulun opiskelijoiden projektityö syksyllä 2018. Projekti toteutettiin Arduino UNO -mikrokontrollerilla ja siihen liitettävillä sensoreilla. Lopulline ohjelma löytyy kansiosta HappyPlant.'
+**fi/** Happy Plant oli Metropolia Ammattikorkeakoulun opiskelijoiden projektityö syksyllä 2018. Projekti toteutettiin Arduino UNO -mikrokontrollerilla ja siihen liitettävillä sensoreilla. Lopulline ohjelma löytyy kansiosta HappyPlant.'
 
-en/ Happy Plant was a student project from students of Metropolia University of Applied Sciences. The final code is in the folder named HappyPlant. The project was made with Arduino UNO and Arduino compatible censors.
+**en/** Happy Plant was a student project from students of Metropolia University of Applied Sciences. The final code is in the folder named HappyPlant. The project was made with Arduino UNO and Arduino compatible censors.
 
 Käytetyt komponentit/components used in the project:
 
