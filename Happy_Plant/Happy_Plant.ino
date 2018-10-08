@@ -2,8 +2,6 @@
 
 #include <Arduino.h>
 #include <U8g2lib.h>
-#include <SPI.h>
-#include <Wire.h>
 #include <EEPROM.h>
 #include <LedControl.h> // Library for 8x8 matrix control
 /*
@@ -143,9 +141,9 @@ void nextNote(Melody *currentmelody, byte notes[]);
 
 volatile Melody healing;// pokemon healing
 volatile byte healing_notes[24] = {71, 8, 128, 8, 71, 8, 128, 8, 71, 8, 68, 8, 76, 2, 128, 4, 128, 2, 128, 4, 128, 2, 128, 4 };
-volatile Melody totoAfrica; // Toto: Africa
-volatile byte totoAfrica_notes[22] = { 61, 6, 61, 16, 0, 32, 128, 32, 61, 16, 0, 32, 128, 32, 61, 16, 61, 8, 59, 8, 64, 4  }; // Toto africa
-volatile Melody tilutus;
+//volatile Melody totoAfrica; // Toto: Africa
+//volatile byte totoAfrica_notes[22] = { 61, 6, 61, 16, 0, 32, 128, 32, 61, 16, 0, 32, 128, 32, 61, 16, 61, 8, 59, 8, 64, 4  }; // Toto africa
+//volatile Melody tilutus;
 /*volatile byte tilutus_notes[] = { 57, 64, 60, 64, 64, 64, 60, 64,
                                   57, 64, 60, 64, 64, 64, 60, 64,
                                   57, 64, 60, 64, 64, 64, 60, 64,
@@ -264,7 +262,7 @@ void loop() {
     Serial.print("OLED update: ");
     Serial.println(NextState);
   }
-
+         
   if (millis() - PrintButtonTimer > PRINT_BUTTON_INTERV) {
     if((NextState != STATE_MOIST) && (NextState != STATE_TEMP)) {
       NextState = STATE_TEMP;
