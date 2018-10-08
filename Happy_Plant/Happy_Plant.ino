@@ -277,22 +277,18 @@ void loop() {
   if (soilSensor() < MaxMoistureEmoji)
   {
     drawScreen(DED);
-    Serial.print("LED: DED");
   }
   else if (soilSensor() >= MaxMoistureEmoji && soilSensor() < OptimalHighEmoji)
   {
     drawScreen(NEUTRAL);
-    Serial.print("LED: NEUTRAL");
   }
   else if (soilSensor() >= OptimalHighEmoji && soilSensor() < OptimalLowEmoji)
   {
     drawScreen(HAPPY);
-    Serial.print("LED: HAPPY");
   }
   else if (soilSensor() > OptimalLowEmoji)
   {
     drawScreen(SAD);
-    Serial.print("LED: SAD");
   }
 }
 
