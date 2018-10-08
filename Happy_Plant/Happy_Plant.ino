@@ -266,10 +266,12 @@ void loop() {
   }
 
   if (millis() - PrintButtonTimer > PRINT_BUTTON_INTERV) {
-    NextState = STATE_MOIST;
-    Serial.print("Resetting OLED.");
-    updateOled();
-    ScreenTimer = millis();
+    if((NextState != STATE_MOIST) || (NextState != STATE_TEMP)) {
+      NextState = STATE_TEMP;
+      Serial.print("Resetting OLED.");
+      updateOled();
+      ScreenTimer = millis();
+    }
   }
 
   /* Led Screen */
@@ -423,7 +425,7 @@ void updateOled() {
 
   u8g2.setFont(u8g2_font_ncenR14_tf);
   u8g2.setCursor(0, 0);
-  char text[20];
+  char text[20] ="";
 
   
   if (NextState == STATE_TEMP_AVG_D) {
