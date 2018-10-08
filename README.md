@@ -6,16 +6,10 @@ en/ Happy Plant was a student project from students of Metropolia University of 
 
 Käytetyt komponentit/components used in the project:
 
--Arduino UNO
-
--Piezo Buzzer
-
--Capacitive Soil Moisture Sensor V1.0
-
--2 x pushdown buttons
-
--TMP36 heat sensor
-
--0.96" 128x32 OLED screen
-
--8x8 LED Matrix (MAX7219)
+ * Arduino UNO
+ * Piezo Buzzer
+ * Capacitive Soil Moisture Sensor V1.0
+ * 2 x pushdown buttons
+ * TMP36 heat sensor
+ * 0.96" 128x32 OLED screen
+ * 8x8 LED Matrix (MAX7219)
