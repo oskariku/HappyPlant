@@ -480,6 +480,11 @@ void updateOled() {
     for(int i=MinMoisture; i>=soilSensor(); i=i-interval) {
     sprintf(watersymbol, "%s %c", watersymbol, 72);
     }
+    Serial.print("Moisture. MinMoisture: ");
+    Serial.print(MinMoisture);
+    Serial.print(" soilSensor: ");
+    Serial.print(soilSensor());
+    
     
     u8g2.clearBuffer();
     u8g2.setFont(u8g2_font_open_iconic_thing_4x_t);
