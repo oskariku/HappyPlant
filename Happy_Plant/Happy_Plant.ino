@@ -401,8 +401,8 @@ void countAverages() {
   moist_avg_w = 0;
 
   //How many samples are saved during a day/week
-  int sample_amount_d = 86400000 / sampleTime * 2;
-  int sample_amount_w = 604800000 / sampleTime * 2; // There are 604800000 milliseconds in a week.
+  unsigned int sample_amount_d = 86400000 / sampleTime * 2;
+  unsigned int sample_amount_w = 604800000 / sampleTime * 2; // There are 604800000 milliseconds in a week.
 
   int samples = address - sample_amount_w;
   if(samples < 0) {
