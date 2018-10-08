@@ -143,9 +143,9 @@ void nextNote(Melody *currentmelody, byte notes[]);
 
 volatile Melody healing;// pokemon healing
 volatile byte healing_notes[24] = {71, 8, 128, 8, 71, 8, 128, 8, 71, 8, 68, 8, 76, 2, 128, 4, 128, 2, 128, 4, 128, 2, 128, 4 };
-volatile Melody totoAfrica; // Toto: Africa
-volatile byte totoAfrica_notes[22] = { 61, 6, 61, 16, 0, 32, 128, 32, 61, 16, 0, 32, 128, 32, 61, 16, 61, 8, 59, 8, 64, 4  }; // Toto africa
-volatile Melody tilutus;
+//volatile Melody totoAfrica; // Toto: Africa
+//volatile byte totoAfrica_notes[22] = { 61, 6, 61, 16, 0, 32, 128, 32, 61, 16, 0, 32, 128, 32, 61, 16, 61, 8, 59, 8, 64, 4  }; // Toto africa
+//volatile Melody tilutus;
 /*volatile byte tilutus_notes[] = { 57, 64, 60, 64, 64, 64, 60, 64,
                                   57, 64, 60, 64, 64, 64, 60, 64,
                                   57, 64, 60, 64, 64, 64, 60, 64,
@@ -206,7 +206,7 @@ void setup() {
   healing.scalar = healing.tempo / 60;
   healing.playing = false;
 
-  totoAfrica.mlength = 22;
+  /*totoAfrica.mlength = 22;
   totoAfrica.tempo = 98;
   totoAfrica.playing = false;
 
@@ -220,7 +220,7 @@ void setup() {
 
   tilutus.curNote = 0;
   tilutus.gap = 0;
-  tilutus.scalar = tilutus.tempo / 60;
+  tilutus.scalar = tilutus.tempo / 60;*/
 
   //Set midi table
 
@@ -264,7 +264,7 @@ void loop() {
     Serial.print("OLED update: ");
     Serial.println(NextState);
   }
-
+         
   if (millis() - PrintButtonTimer > PRINT_BUTTON_INTERV) {
     if((NextState != STATE_MOIST) && (NextState != STATE_TEMP)) {
       NextState = STATE_TEMP;
@@ -363,7 +363,7 @@ void clearEEPROM() {
 
 void writeValue() {
   int heat = heatSensor();
-  int moist = soilSensor() / 2.2; // We must scale value to fit it between 0-255
+  int moist = soilSensor() / 2.4; // We must scale value to fit it between 0-255
   byte heatValue = (byte) heat;
   byte moistValue = (byte) moist;
   EEPROM.write(address, heatValue);
@@ -403,7 +403,7 @@ void countAverages() {
     byte value = EEPROM.read(i);
     int temperature = (int) value;
     value = EEPROM.read(i+1);
-    int moisture = value * 3;
+    int moisture = value * 2.4;
     if (i > address-sample_amount_d) {
       temp_avg_d += temperature;
       moist_avg_d += moisture;
@@ -480,10 +480,10 @@ void updateOled() {
     for(int i=MinMoisture; i>=soilSensor(); i=i-interval) {
     sprintf(watersymbol, "%s %c", watersymbol, 72);
     }
-    Serial.print("Moisture. MinMoisture: ");
+    /*Serial.print("Moisture. MinMoisture: ");
     Serial.print(MinMoisture);
     Serial.print(" soilSensor: ");
-    Serial.print(soilSensor());
+    Serial.print(soilSensor());*/
     
     
     u8g2.clearBuffer();
