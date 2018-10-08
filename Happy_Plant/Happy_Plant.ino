@@ -15,7 +15,7 @@
 #define sampleTime 3600000
 int printPin = 2;
 int erasePin = 3;
-int address = 0;     //EEPROM address counter
+int address = 336;     //EEPROM address counter. Set to 366 for demoing.
 
 unsigned long timer;
 
@@ -237,6 +237,7 @@ void loop() {
     printValue();
     //Update OLED according to a state
     updateOled();
+    ScreenTimer = millis();
     delay(500);
   }
   
@@ -268,10 +269,6 @@ void loop() {
   if (millis() - ScreenTimer > SCREEN_UPD_INTERV) {
     updateOled();
     ScreenTimer = millis();
-    Serial.print("OLED update: ");
-    Serial.print(ScreenTimer);
-    Serial.print(" ");
-    Serial.println(NextState);
 
     /* Led Screen */
     
@@ -413,9 +410,15 @@ void countAverages() {
   Serial.print(sample_amount_d);
   Serial.print(" ");
   Serial.print(sample_amount_w);
+  Serial.print(" ");
+  Serial.println(samples);
 
   for(int i = address-1; i > samples; i-=2) {
     byte value = EEPROM.read(i);
+    Serial.print("Byte adress / value: ");
+    Serial.print(i);
+    Serial.print(" / ");
+    Serial.println(value);
     int temperature = (int) value;
     value = EEPROM.read(i+1);
     int moisture = value * 2.4;
@@ -448,28 +451,28 @@ void updateOled() {
     Serial.print("Temp avg d: ");
     Serial.println(temp_avg_d);
     sprintf(text, "Daily avg");
-    sprintf(text2, "temp: %d", temp_avg_d);
+    sprintf(text2, "temp: %d", (int)temp_avg_d);
 
   } else if (NextState == STATE_MOIST_AVG_D) {
     //Print daily average moisture
     Serial.print("Moist avg d: ");
     Serial.println(moist_avg_d);
     sprintf(text, "Daily avg ");
-    sprintf(text2, "moist: %d", moist_avg_d);
+    sprintf(text2, "moist: %d", (int)moist_avg_d);
 
   } else if (NextState == STATE_TEMP_AVG_W) {
     //Print weekly average temperature
     Serial.print("Temp avg w: ");
     Serial.println(temp_avg_w);
     sprintf(text, "Weekly avg");
-    sprintf(text2, "temp: %d", temp_avg_w);
+    sprintf(text2, "temp: %d", (int)temp_avg_w);
 
   } else if (NextState == STATE_MOIST_AVG_W) {
     //Print weekly average moisture
     Serial.print("Moist avg w: ");
     Serial.println(moist_avg_w);
     sprintf(text, "Weekly avg");
-    sprintf(text2, "moist: %d", moist_avg_d);
+    sprintf(text2, "moist: %d", (int)moist_avg_w);
 
   } else if (NextState == STATE_TEMP) {
     // Print temperature
