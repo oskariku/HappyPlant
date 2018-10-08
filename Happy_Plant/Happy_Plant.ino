@@ -266,7 +266,7 @@ void loop() {
   }
 
   if (millis() - PrintButtonTimer > PRINT_BUTTON_INTERV) {
-    if((NextState != STATE_MOIST) || (NextState != STATE_TEMP)) {
+    if((NextState != STATE_MOIST) && (NextState != STATE_TEMP)) {
       NextState = STATE_TEMP;
       Serial.print("Resetting OLED.");
       updateOled();
