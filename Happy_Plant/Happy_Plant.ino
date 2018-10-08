@@ -363,7 +363,7 @@ void clearEEPROM() {
 
 void writeValue() {
   int heat = heatSensor();
-  int moist = soilSensor() / 2.2; // We must scale value to fit it between 0-255
+  int moist = soilSensor() / 2.4; // We must scale value to fit it between 0-255
   byte heatValue = (byte) heat;
   byte moistValue = (byte) moist;
   EEPROM.write(address, heatValue);
@@ -403,7 +403,7 @@ void countAverages() {
     byte value = EEPROM.read(i);
     int temperature = (int) value;
     value = EEPROM.read(i+1);
-    int moisture = value * 3;
+    int moisture = value * 2.4;
     if (i > address-sample_amount_d) {
       temp_avg_d += temperature;
       moist_avg_d += moisture;
