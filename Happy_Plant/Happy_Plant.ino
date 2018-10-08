@@ -350,15 +350,6 @@ void printValue() {
       NextState = STATE_TEMP;
       break;
   }
-
-  /*
-   * Not sure what this code is for...
-    for(int i=0; i < EEPROM.length(); i++) {
-    byte value = EEPROM.read(i);              //  read EEPROM data at address i
-    if(value != 0) {
-      Serial.println(heatSensor());
-    }
-  }*/
 }
 
 void clearEEPROM() {
