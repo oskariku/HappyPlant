@@ -261,6 +261,26 @@ void loop() {
     Serial.print(ScreenTimer);
     Serial.print(" ");
     Serial.println(NextState);
+
+    /* Led Screen */
+    
+    if (soilSensor() < MaxMoistureEmoji)
+    {
+      drawScreen(DED);
+    }
+    else if (soilSensor() >= MaxMoistureEmoji && soilSensor() < OptimalHighEmoji)
+    {
+      drawScreen(NEUTRAL);
+    }
+    else if (soilSensor() >= OptimalHighEmoji && soilSensor() < OptimalLowEmoji)
+    {
+      drawScreen(HAPPY);
+    }
+    else if (soilSensor() > OptimalLowEmoji)
+    {
+      drawScreen(SAD);
+    }
+    
   }
          
   if (millis() - PrintButtonTimer > PRINT_BUTTON_INTERV) {
@@ -272,24 +292,6 @@ void loop() {
     }
   }
 
-  /* Led Screen */
-
-  if (soilSensor() < MaxMoistureEmoji)
-  {
-    drawScreen(DED);
-  }
-  else if (soilSensor() >= MaxMoistureEmoji && soilSensor() < OptimalHighEmoji)
-  {
-    drawScreen(NEUTRAL);
-  }
-  else if (soilSensor() >= OptimalHighEmoji && soilSensor() < OptimalLowEmoji)
-  {
-    drawScreen(HAPPY);
-  }
-  else if (soilSensor() > OptimalLowEmoji)
-  {
-    drawScreen(SAD);
-  }
 }
 
 /* Timer interrupt for music */
@@ -478,10 +480,10 @@ void updateOled() {
     for(int i=MinMoisture; i>=soilSensor(); i=i-(MinMoisture - MinMoisture)/4) {
     sprintf(watersymbol, "%s %c", watersymbol, 72);
     }
-    /*Serial.print("Moisture. MinMoisture: ");
+    Serial.print("Moisture. MinMoisture: ");
     Serial.print(MinMoisture);
     Serial.print(" soilSensor: ");
-    Serial.print(soilSensor());*/
+    Serial.print(soilSensor());
     
     
     u8g2.clearBuffer();
