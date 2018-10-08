@@ -9,9 +9,12 @@ void setup() {
  while(!Serial) {
   ; //wait until serial is up and running
  }
- for( int i = 0; i < 10; i++) {
-  EEPROM.write(i, 255-i*2);
+ for( int i = 0; i < 336; i+=2) {
+  EEPROM.write(i, 128);
   delay(100);
+ }
+ for( int i = 1; i < 336; i+=2) {
+  EEPROM.write(i, 22);
  }
 
 }
