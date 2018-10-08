@@ -249,6 +249,7 @@ void loop() {
   if (millis() - PlayMelodyTimer > MELODY_TRIG_INTERV) {
     if(soilSensor()-PrevMoisture-MaxMoisture > MOISTURE_CHANGE) {
       healing.playing = true;
+      Serial.println("Playing melody: healing.");
     }
     
     PlayMelodyTimer  = millis();
@@ -260,10 +261,13 @@ void loop() {
   if (millis() - ScreenTimer > SCREEN_UPD_INTERV) {
     updateOled();
     ScreenTimer = millis();
+    Serial.print("OLED update: ");
+    Serial.println(NextState);
   }
 
   if (millis() - PrintButtonTimer > PRINT_BUTTON_INTERV) {
     NextState = STATE_MOIST;
+    Serial.print("Resetting OLED.");
     updateOled();
     ScreenTimer = millis();
   }
@@ -273,18 +277,22 @@ void loop() {
   if (soilSensor() < MaxMoistureEmoji)
   {
     drawScreen(DED);
+    Serial.print("LED: DED");
   }
   else if (soilSensor() >= MaxMoistureEmoji && soilSensor() < OptimalHighEmoji)
   {
     drawScreen(NEUTRAL);
+    Serial.print("LED: NEUTRAL");
   }
   else if (soilSensor() >= OptimalHighEmoji && soilSensor() < OptimalLowEmoji)
   {
     drawScreen(HAPPY);
+    Serial.print("LED: HAPPY");
   }
   else if (soilSensor() > OptimalLowEmoji)
   {
     drawScreen(SAD);
+    Serial.print("LED: SAD");
   }
 }
 
@@ -390,6 +398,9 @@ void countAverages() {
     samples = 0;
   }
 
+  Serial.print("Counting averages. Sample amount D / W :");
+  Serial.print(sample_amount_d, sample_amount_w);
+
   for(int i = address-1; i > samples; i-=2) {
     byte value = EEPROM.read(i);
     int temperature = (int) value;
@@ -421,22 +432,26 @@ void updateOled() {
   
   if (NextState == STATE_TEMP_AVG_D) {
     // Print daily average temperature
-    Serial.print(temp_avg_d);
+    Serial.print("Temp avg d: ");
+    Serial.println(temp_avg_d);
     sprintf(text, "Daily avg temp: %d", temp_avg_d);
 
   } else if (NextState == STATE_MOIST_AVG_D) {
     //Print daily average moisture
-    Serial.print(moist_avg_d);
+    Serial.print("Moist avg d: ");
+    Serial.println(moist_avg_d);
     sprintf(text, "Daily avg moist: %d", moist_avg_d);
 
   } else if (NextState == STATE_TEMP_AVG_W) {
     //Print weekly average temperature
-    Serial.print(temp_avg_w);
+    Serial.print("Temp avg w: ");
+    Serial.println(temp_avg_w);
     sprintf(text, "Weekly avg temp: %d", temp_avg_w);
 
   } else if (NextState == STATE_MOIST_AVG_W) {
     //Print weekly average moisture
-    Serial.print(moist_avg_w);
+    Serial.print("Moist avg w: ");
+    Serial.println(moist_avg_w);
     sprintf(text, "Weekly avg moist: %d", moist_avg_d);
 
   } else if (NextState == STATE_TEMP) {
