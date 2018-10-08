@@ -236,16 +236,24 @@ void loop() {
     printValue();
     //Update OLED according to a state
     updateOled();
+    delay(500);
   }
   
   if(!digitalRead(erasePin)) {
     clearEEPROM();
     delay(500);
+    healing.playing = true;
   }
 
   /* Play melody */
   if (millis() - PlayMelodyTimer > MELODY_TRIG_INTERV) {
-    if(soilSensor()-PrevMoisture-MaxMoisture > MOISTURE_CHANGE) {
+    Serial.println("SoilSensor, PrevMoisture, MaxMoisture:");
+    Serial.print(soilSensor());
+    Serial.print(" ");
+    Serial.print(PrevMoisture);
+    Serial.print(" ");
+    Serial.println(MaxMoisture);
+    if(PrevMoisture-soilSensor()> MOISTURE_CHANGE) {
       healing.playing = true;
       Serial.println("Playing melody: healing.");
     }
@@ -425,34 +433,38 @@ void updateOled() {
 
   u8g2.clearBuffer();          // clear the internal memory
 
-  u8g2.setFont(u8g2_font_ncenR14_tf);
-  u8g2.setCursor(0, 0);
+  u8g2.setFont(u8g2_font_ncenR10_tf);
   char text[20] ="";
+  char text2[20] = "";
 
   
   if (NextState == STATE_TEMP_AVG_D) {
     // Print daily average temperature
     Serial.print("Temp avg d: ");
     Serial.println(temp_avg_d);
-    sprintf(text, "Daily avg temp: %d", temp_avg_d);
+    sprintf(text, "Daily avg");
+    sprintf(text2, "temp: %d", temp_avg_d);
 
   } else if (NextState == STATE_MOIST_AVG_D) {
     //Print daily average moisture
     Serial.print("Moist avg d: ");
     Serial.println(moist_avg_d);
-    sprintf(text, "Daily avg moist: %d", moist_avg_d);
+    sprintf(text, "Daily avg ");
+    sprintf(text2, "moist: %d", moist_avg_d);
 
   } else if (NextState == STATE_TEMP_AVG_W) {
     //Print weekly average temperature
     Serial.print("Temp avg w: ");
     Serial.println(temp_avg_w);
-    sprintf(text, "Weekly avg temp: %d", temp_avg_w);
+    sprintf(text, "Weekly avg");
+    sprintf(text2, "temp: %d", temp_avg_w);
 
   } else if (NextState == STATE_MOIST_AVG_W) {
     //Print weekly average moisture
     Serial.print("Moist avg w: ");
     Serial.println(moist_avg_w);
-    sprintf(text, "Weekly avg moist: %d", moist_avg_d);
+    sprintf(text, "Weekly avg");
+    sprintf(text2, "moist: %d", moist_avg_d);
 
   } else if (NextState == STATE_TEMP) {
     // Print temperature
@@ -478,9 +490,9 @@ void updateOled() {
     //Print moisture
   
     char watersymbol[4]="";
-    
-    for(int i=MinMoisture; i>=soilSensor(); i=i-(MinMoisture - MinMoisture)/4) {
-    sprintf(watersymbol, "%s %c", watersymbol, 72);
+    int soilvalue = soilSensor();
+    for(int i=MinMoisture; i>=soilvalue; i=i-(MinMoisture - MaxMoisture)/4) {
+      sprintf(watersymbol, "%s %c", watersymbol, 72);
     }
     Serial.print("Moisture. MinMoisture: ");
     Serial.print(MinMoisture);
@@ -497,7 +509,10 @@ void updateOled() {
   }
 
   //Print text if any:
+  u8g2.setCursor(0, 14);
   u8g2.print(text);
+  u8g2.setCursor(0, 30);
+  u8g2.print(text2);
   u8g2.sendBuffer();         // transfer internal memory to the display
 }
 
