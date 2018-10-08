@@ -220,7 +220,8 @@ void setup() {
   tilutus.gap = 0;
   tilutus.scalar = tilutus.tempo / 60;*/
 
-  //Set midi table
+  //Count averages
+  countAverages();
 
 }
 
@@ -350,6 +351,15 @@ void printValue() {
       NextState = STATE_TEMP;
       break;
   }
+
+  /*
+   * Not sure what this code is for...
+    for(int i=0; i < EEPROM.length(); i++) {
+    byte value = EEPROM.read(i);              //  read EEPROM data at address i
+    if(value != 0) {
+      Serial.println(heatSensor());
+    }
+  }*/
 }
 
 void clearEEPROM() {
@@ -379,6 +389,8 @@ void writeValue() {
   if(address == EEPROM.length()) {       //  check if address counter has reached the end of EEPROM
     address=0;                            //  if yes: reset address counter
   }
+
+  countAverages();
 }
 
 void countAverages() {
