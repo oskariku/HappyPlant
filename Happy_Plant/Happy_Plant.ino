@@ -410,7 +410,9 @@ void countAverages() {
   }
 
   Serial.print("Counting averages. Sample amount D / W :");
-  Serial.print(sample_amount_d, sample_amount_w);
+  Serial.print(sample_amount_d);
+  Serial.print(" ");
+  Serial.print(sample_amount_w);
 
   for(int i = address-1; i > samples; i-=2) {
     byte value = EEPROM.read(i);
