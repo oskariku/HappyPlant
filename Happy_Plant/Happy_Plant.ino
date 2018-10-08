@@ -1,7 +1,9 @@
 //final code
 
-#include <Arduino.h>
+//#include <Arduino.h>
 #include <U8g2lib.h>
+//#include <SPI.h>
+//#include <Wire.h>
 #include <EEPROM.h>
 #include <LedControl.h> // Library for 8x8 matrix control
 /*
@@ -29,7 +31,7 @@ unsigned long PlayMelodyTimer;
 #define MELODY_TRIG_INTERV 60000 //How often moisture change will be tested
 #define MOISTURE_CHANGE 70 //How much moisture value must change in order to play a melody?
 
-const int MinMoisture = 535;
+const int MinMoisture = 600;
 const int MaxMoisture= 255;
 
 const int MinMoistureEmoji = 500;
