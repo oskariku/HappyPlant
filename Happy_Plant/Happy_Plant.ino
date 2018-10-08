@@ -40,8 +40,6 @@ const int MaxMoistureEmoji = 290;
 const int OptimalHighEmoji = 360;
 const int OptimalLowEmoji = 430;
 
-int interval = (MinMoisture - MinMoisture)/4; // Values (wet to dry): 255-320-385-450-515
-
 int PrevMoisture = MaxMoisture;
 
 volatile float temp_avg_d = 0;
@@ -262,6 +260,8 @@ void loop() {
     updateOled();
     ScreenTimer = millis();
     Serial.print("OLED update: ");
+    Serial.print(ScreenTimer);
+    Serial.print(" ");
     Serial.println(NextState);
   }
          
@@ -477,7 +477,7 @@ void updateOled() {
   
     char watersymbol[4]="";
     
-    for(int i=MinMoisture; i>=soilSensor(); i=i-interval) {
+    for(int i=MinMoisture; i>=soilSensor(); i=i-(MinMoisture - MinMoisture)/4) {
     sprintf(watersymbol, "%s %c", watersymbol, 72);
     }
     /*Serial.print("Moisture. MinMoisture: ");
